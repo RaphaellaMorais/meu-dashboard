@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Por onde começo hoje?</title>
+  <meta name="description" content="Dashboard de início de dia — saiba por onde começar assim que chegar no trabalho." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@200;300;600;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    /* ── Reset & tokens ────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:          #080c14;
+      --surface:     rgba(255,255,255,0.035);
+      --surface-hov: rgba(255,255,255,0.065);
+      --border:      rgba(255,255,255,0.08);
+      --border-hov:  rgba(255,255,255,0.16);
+      --text-primary:   #f0f4ff;
+      --text-secondary: rgba(240,244,255,0.55);
+      --text-muted:     rgba(240,244,255,0.28);
+      --accent-mail:   hsl(220, 90%, 62%);
+      --accent-meet:   hsl(275, 80%, 62%);
+      --accent-task:   hsl(158, 70%, 48%);
+      --radius-card: 1.25rem;
+      --shadow-card:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 24px 60px rgba(0,0,0,0.45);
+    }
+
+    /* ── Body & background ─────────────────────────────────── */
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* Gradient orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, hsl(220,80%,22%) 0%, transparent 70%);
+      top: -180px; left: -160px;
+      animation: driftA 16s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, hsl(275,65%,18%) 0%, transparent 70%);
+      bottom: -140px; right: -120px;
+      animation: driftB 18s ease-in-out infinite alternate;
+    }
+    .orb-3 {
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, hsl(158,55%,14%) 0%, transparent 70%);
+      top: 40%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: driftA 22s ease-in-out infinite alternate;
+    }
+    @keyframes driftA {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(40px,28px) scale(1.08); }
+    }
+    @keyframes driftB {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(-30px,-20px) scale(1.06); }
+    }
+
+    /* Constellation background */
+    #stars-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: twinkle var(--duration) infinite ease-in-out;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    .constellation-line {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.05);
+      height: 1px;
+      transform-origin: 0 0;
+    }
+
+    .motivational-phrase {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      font-style: italic;
+      color: var(--text-secondary);
+      opacity: 0.8;
+      border-left: 2px solid var(--accent-task);
+      padding-left: 1rem;
+      animation: fadeIn 1s ease-out 0.5s both;
+    }
+
+    /* ── Page layout ───────────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 3.5rem 2rem 5rem;
+    }
+
+    /* ── Header ────────────────────────────────────────────── */
+    header {
+      margin-bottom: 3.5rem;
+      animation: slideDown 0.8s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .pulse-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-task);
+      box-shadow: 0 0 0 0 hsla(158,70%,48%,0.5);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 hsla(158,70%,48%,0.5); }
+      60%       { box-shadow: 0 0 0 7px hsla(158,70%,48%,0); }
+    }
+
+    .eyebrow-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+      background: linear-gradient(130deg, #ffffff 0%, #a8c4ff 50%, #c4a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .date-line {
+      margin-top: 0.9rem;
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Divider ───────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Section label ─────────────────────────────────────── */
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Cards grid ────────────────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      position: relative;
+      padding: 1.75rem 1.75rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-card);
+      cursor: default;
+      transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s cubic-bezier(.22,.68,0,1.2),
+        box-shadow 0.25s ease;
+      animation: fadeUp 0.7s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.15s; }
+    .card:nth-child(2) { animation-delay: 0.28s; }
+    .card:nth-child(3) { animation-delay: 0.41s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      background: var(--surface-hov);
+      border-color: var(--border-hov);
+      transform: translateY(-4px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.07) inset,
+        0 32px 72px rgba(0,0,0,0.55);
+    }
+
+    /* Accent top bar */
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .card:hover::before { opacity: 1; }
+
+    .card--mail  { --accent: var(--accent-mail); }
+    .card--meet  { --accent: var(--accent-meet); }
+    .card--task  { --accent: var(--accent-task); }
+
+    /* Top accent stripe */
+    .card-stripe {
+      position: absolute;
+      top: 0; left: 1.5rem; right: 1.5rem;
+      height: 2px;
+      border-radius: 0 0 4px 4px;
+      background: var(--accent);
+      opacity: 0.75;
+      transition: opacity 0.25s ease, left 0.25s ease, right 0.25s ease;
+    }
+    .card:hover .card-stripe {
+      opacity: 1;
+      left: 1rem;
+      right: 1rem;
+    }
+
+    /* Icon badge */
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.2rem;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+      transition: transform 0.25s cubic-bezier(.22,.68,0,1.2);
+    }
+    .card:hover .card-icon {
+      transform: scale(1.1) rotate(-4deg);
+    }
+
+    /* Number */
+    .card-number {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3.25rem;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      margin-bottom: 0.35rem;
+    }
+
+    /* Label */
+    .card-label {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+
+    /* Sub-label */
+    .card-sub {
+      font-size: 0.75rem;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+
+    /* Status pill */
+    .card-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 1.2rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+    .card-pill::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.8;
+    }
+
+    /* ── Chart panel ────────────────────────────────────────── */
+    .chart-panel {
+      position: relative;
+      margin-top: 2rem;
+      padding: 1.75rem 1.75rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-card);
+      animation: fadeUp 0.7s 0.52s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .chart-legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 3px;
+      background: var(--accent-mail);
+      opacity: 0.85;
+    }
+
+    .chart-today-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--accent-mail) 12%, transparent);
+      color: var(--accent-mail);
+      border: 1px solid color-mix(in srgb, var(--accent-mail) 20%, transparent);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 200px;
+    }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      animation: fadeUp 0.7s 0.68s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    /* ── Agenda ─────────────────────────────────────────────── */
+    .agenda-panel {
+      position: relative;
+      margin-top: 2rem;
+      padding: 1.75rem 1.75rem 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-card);
+      animation: fadeUp 0.7s 0.6s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    .agenda-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+    }
+
+    .agenda-title {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .agenda-count {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent-meet) 12%, transparent);
+      color: var(--accent-meet);
+      border: 1px solid color-mix(in srgb, var(--accent-meet) 20%, transparent);
+    }
+
+    .agenda-list {
+      list-style: none;
+      margin-top: 1.25rem;
+    }
+
+    .agenda-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-top: 1px solid var(--border);
+      transition: background 0.2s ease;
+      border-radius: 0.5rem;
+      margin: 0 -0.5rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      cursor: default;
+    }
+
+    .agenda-item:first-child {
+      border-top: none;
+    }
+
+    .agenda-item:hover {
+      background: var(--surface-hov);
+    }
+
+    /* Time badge */
+    .agenda-time {
+      min-width: 3.5rem;
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--accent-meet);
+      background: color-mix(in srgb, var(--accent-meet) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent-meet) 18%, transparent);
+      border-radius: 8px;
+      padding: 0.3rem 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* Calendar icon circle */
+    .agenda-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      background: color-mix(in srgb, var(--accent-meet) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent-meet) 16%, transparent);
+      flex-shrink: 0;
+      transition: transform 0.22s cubic-bezier(.22,.68,0,1.2);
+    }
+
+    .agenda-item:hover .agenda-icon {
+      transform: scale(1.12) rotate(-5deg);
+    }
+
+    /* Event info */
+    .agenda-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .agenda-event-title {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .agenda-duration {
+      font-size: 0.72rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* ── Login overlay ──────────────────────────────────────── */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 12, 20, 0.96);
+      backdrop-filter: blur(12px);
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .login-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .login-card {
+      text-align: center;
+      padding: 3rem 3.5rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 1.5rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      animation: fadeUp 0.7s cubic-bezier(.22,.68,0,1.2) both;
+      max-width: 380px;
+      width: 90%;
+    }
+    .login-logo {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .login-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(130deg, #ffffff 0%, #a8c4ff 50%, #c4a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .login-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+    .btn-google {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.07);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s cubic-bezier(.22,.68,0,1.2),
+        box-shadow 0.2s ease;
+    }
+    .btn-google:hover {
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .btn-google:active { transform: scale(0.97); }
+    .btn-google svg { flex-shrink: 0; }
+    .login-scopes {
+      margin-top: 1.25rem;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+    /* Loading skeleton shimmer */
+    .skeleton {
+      display: inline-block;
+      border-radius: 6px;
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0.06) 25%,
+        rgba(255,255,255,0.12) 50%,
+        rgba(255,255,255,0.06) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Tarot Card ────────────────────────────────────────── */
+    .tarot-panel {
+      position: relative;
+      margin-top: 2rem;
+      padding: 1.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      animation: fadeUp 0.7s 0.75s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    .tarot-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .tarot-card-container {
+      perspective: 1000px;
+      width: 180px;
+      height: 280px;
+      cursor: pointer;
+    }
+
+    .tarot-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+    }
+
+    .tarot-card-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .tarot-card-front, .tarot-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      border: 2px solid rgba(255,215,0,0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .tarot-card-back {
+      background: #0d121f;
+      background-image: url('tarot_card_back_1778802639003.png');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .tarot-card-front {
+      background: #0d121f;
+      transform: rotateY(180deg);
+      padding: 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tarot-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .tarot-card-info-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem 1rem 1.25rem;
+      background: linear-gradient(to top, rgba(8,12,20,0.95) 0%, rgba(8,12,20,0.8) 60%, transparent 100%);
+      text-align: center;
+    }
+
+    .tarot-card-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .tarot-card-desc {
+      font-size: 0.72rem;
+      color: var(--text-primary);
+      line-height: 1.3;
+      opacity: 0.9;
+      max-width: 150px;
+      margin: 0 auto;
+    }
+
+    .tarot-instruction {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-style: italic;
+      z-index: 2;
+    }
+
+    /* ── Floating Mystical Elements ── */
+    .tarot-decor {
+      position: absolute;
+      pointer-events: none;
+      color: var(--accent-mail);
+      opacity: 0.08;
+      filter: blur(1px);
+      z-index: 0;
+      animation: float-mystic var(--d) infinite ease-in-out;
+    }
+
+    @keyframes float-mystic {
+      0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+      33% { transform: translate(20px, -30px) rotate(15deg) scale(1.1); }
+      66% { transform: translate(-20px, 20px) rotate(-10deg) scale(0.9); }
+    }
+
+    .tarot-decor-1 { top: 15%; left: 10%; --d: 12s; }
+    .tarot-decor-2 { top: 70%; left: 15%; --d: 15s; }
+    .tarot-decor-3 { top: 25%; right: 12%; --d: 18s; }
+    .tarot-decor-4 { top: 75%; right: 10%; --d: 14s; }
+    .tarot-decor-5 { top: 50%; left: 45%; --d: 20s; }
+    /* User avatar chip in header */
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.3rem 0.75rem 0.3rem 0.3rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      animation: fadeUp 0.5s ease both;
+    }
+    .user-chip img {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .user-chip-placeholder {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent-meet);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700; color: #fff;
+    }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 520px) {
+      .page { padding: 2.5rem 1.25rem 4rem; }
+      .cards { grid-template-columns: 1fr; }
+      .card-number { font-size: 2.75rem; }
+      .agenda-time { font-size: 0.72rem; min-width: 3rem; }
+      .login-card { padding: 2.5rem 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background orbs -->
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+  <div class="orb orb-3" aria-hidden="true"></div>
+  <div id="stars-container" aria-hidden="true"></div>
+
+  <!-- ── Login overlay ── -->
+  <div class="login-overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-label="Entrar no dashboard">
+    <div class="login-card">
+      <span class="login-logo" aria-hidden="true">☀️</span>
+      <div class="login-title">Por onde começo hoje?</div>
+      <p class="login-subtitle">Entre com sua conta Google para carregar<br>seus e-mails e agenda em tempo real.</p>
+      <button class="btn-google" id="btnSignIn" aria-label="Entrar com Google">
+        <!-- Google 'G' SVG -->
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+        </svg>
+        Entrar com Google
+      </button>
+      <p class="login-scopes">🔒&ensp;Leitura de Gmail &amp; Google Calendar</p>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- ── Header ── -->
+    <header>
+      <div class="header-eyebrow">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span class="eyebrow-text">Dashboard de início de dia</span>
+      </div>
+      <h1>Por onde começo hoje?</h1>
+      <p class="date-line" id="dateDisplay">Quarta-feira, 14 de maio de 2025</p>
+      <div id="motivationalPhrase" class="motivational-phrase"></div>
+      <div id="userChip" style="display:none"></div>
+    </header>
+
+    <div class="divider" aria-hidden="true"></div>
+
+    <!-- ── Summary cards ── -->
+    <p class="section-label">Resumo do dia</p>
+
+    <div class="cards" role="list">
+
+      <!-- Card 1 — Emails -->
+      <article class="card card--mail" id="card-emails" role="listitem">
+        <div class="card-stripe" aria-hidden="true"></div>
+        <div class="card-icon" aria-hidden="true"><i data-lucide="mail"></i></div>
+        <div class="card-number" id="emailCount" aria-label="emails não lidos">12</div>
+        <div class="card-label">Emails não lidos</div>
+        <div class="card-sub" id="emailSub">Desde ontem às 18h</div>
+        <div class="card-pill" id="emailPill">Precisa atenção</div>
+      </article>
+
+      <!-- Card 2 — Reuniões -->
+      <article class="card card--meet" id="card-reunioes" role="listitem">
+        <div class="card-stripe" aria-hidden="true"></div>
+        <div class="card-icon" aria-hidden="true"><i data-lucide="calendar"></i></div>
+        <div class="card-number" id="meetCount" aria-label="reuniões hoje">3</div>
+        <div class="card-label">Reuniões hoje</div>
+        <div class="card-sub" id="meetSub">Próxima às 10:00 — Daily</div>
+        <div class="card-pill" id="meetPill">Em breve</div>
+      </article>
+
+      <!-- Card 3 — Tarefas -->
+      <article class="card card--task" id="card-tarefas" role="listitem">
+        <div class="card-stripe" aria-hidden="true"></div>
+        <div class="card-icon" aria-hidden="true"><i data-lucide="check-square"></i></div>
+        <div class="card-number" id="taskCount" aria-label="tarefas">7</div>
+        <div class="card-label">Tarefas pendentes</div>
+        <div class="card-sub" id="taskSub">Carregando tarefas...</div>
+        <div class="card-pill" id="taskPill">Pendentes</div>
+      </article>
+
+    </div>
+
+    <!-- ── Email volume chart ── -->
+    <section class="chart-panel" id="section-chart" aria-label="Volume de e-mails na semana">
+      <div class="chart-header">
+        <span class="chart-title"><i data-lucide="bar-chart-3" style="width:16px;height:16px;vertical-align:text-bottom"></i>&ensp;Volume de e-mails na semana</span>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+          <div class="chart-legend">
+            <div class="chart-legend-dot"></div>
+            <span>E-mails recebidos</span>
+          </div>
+          <span class="chart-today-badge">Hoje: 12</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="emailChart" aria-label="Gráfico de barras: volume de e-mails dos últimos 7 dias" role="img"></canvas>
+      </div>
+    </section>
+
+    <!-- ── Agenda de hoje ── -->
+    <section class="agenda-panel" id="section-agenda" aria-label="Agenda de hoje">
+      <div class="agenda-header">
+        <span class="agenda-title"><i data-lucide="calendar-days" style="width:16px;height:16px;vertical-align:text-bottom"></i>&ensp;Agenda de hoje</span>
+        <span class="agenda-count" id="agenda-count">4 eventos</span>
+      </div>
+
+      <ul class="agenda-list">
+
+        <li class="agenda-item">
+          <span class="agenda-time">09:30</span>
+          <div class="agenda-icon" aria-hidden="true">📅</div>
+          <div class="agenda-info">
+            <div class="agenda-event-title">Daily da equipe</div>
+            <div class="agenda-duration">15 min &mdash; Google Meet</div>
+          </div>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-time">11:00</span>
+          <div class="agenda-icon" aria-hidden="true">📅</div>
+          <div class="agenda-info">
+            <div class="agenda-event-title">Review de sprint com o cliente</div>
+            <div class="agenda-duration">1 h &mdash; Zoom</div>
+          </div>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-time">14:00</span>
+          <div class="agenda-icon" aria-hidden="true">📅</div>
+          <div class="agenda-info">
+            <div class="agenda-event-title">1:1 com a liderança</div>
+            <div class="agenda-duration">30 min &mdash; Teams</div>
+          </div>
+        </li>
+
+        <li class="agenda-item">
+          <span class="agenda-time">16:30</span>
+          <div class="agenda-icon" aria-hidden="true">📅</div>
+          <div class="agenda-info">
+            <div class="agenda-event-title">Planejamento da próxima semana</div>
+            <div class="agenda-duration">45 min &mdash; Sala de reuniões B</div>
+          </div>
+        </li>
+
+      </ul>
+    </section>
+
+    <!-- ── Tarot of the Day ── -->
+    <section class="tarot-panel" id="section-tarot" aria-label="Tarot do dia">
+      <!-- Animated Background Elements -->
+      <div class="tarot-decor tarot-decor-1"><i data-lucide="moon" style="width:40px;height:40px"></i></div>
+      <div class="tarot-decor tarot-decor-2"><i data-lucide="sparkles" style="width:24px;height:24px"></i></div>
+      <div class="tarot-decor tarot-decor-3"><i data-lucide="star" style="width:32px;height:32px"></i></div>
+      <div class="tarot-decor tarot-decor-4"><i data-lucide="wand-2" style="width:28px;height:28px"></i></div>
+      <div class="tarot-decor tarot-decor-5"><i data-lucide="compass" style="width:50px;height:50px"></i></div>
+
+      <div class="tarot-header">
+        <i data-lucide="sparkles" style="width:18px;height:18px"></i>
+        <span>Tarot do Dia</span>
+      </div>
+      
+      <div class="tarot-card-container" id="tarotContainer">
+        <div class="tarot-card-inner" id="tarotInner">
+          <div class="tarot-card-back"></div>
+          <div class="tarot-card-front" id="tarotFront">
+            <img src="" alt="" class="tarot-card-img" id="tarotImg">
+            <div class="tarot-card-info-overlay">
+              <div class="tarot-card-name" id="tarotName"></div>
+              <div class="tarot-card-desc" id="tarotDesc"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <p class="tarot-instruction" id="tarotInstruction">Clique na carta para revelar seu insight...</p>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer>
+      <span>Bom trabalho hoje 🚀</span>
+    </footer>
+
+  </div>
+
+  <script>
+  // ═══════════════════════════════════════════════════════════
+  // Chart initialisation (runs immediately with placeholder data)
+  // ═══════════════════════════════════════════════════════════
+  let emailChartInstance = null;
+
+  (function initChart() {
+    var labels     = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+    var data       = [12, 5, 8, 20, 3, 15, 9];
+    var d = new Date();
+    var todayIndex = d.getDay() === 0 ? 6 : d.getDay() - 1;
+
+    var accentBlue    = 'hsl(220, 90%, 62%)';
+    var accentBlueDim = 'hsla(220, 90%, 62%, 0.22)';
+    var todayColor    = 'hsl(220, 90%, 68%)';
+    var todayBg       = 'hsla(220, 90%, 62%, 0.55)';
+
+    var barColors    = data.map(function(_, i){ return i === todayIndex ? todayBg    : accentBlueDim; });
+    var borderColors = data.map(function(_, i){ return i === todayIndex ? todayColor : accentBlue;    });
+
+    var ctx = document.getElementById('emailChart').getContext('2d');
+
+    emailChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'E-mails recebidos',
+          data: data,
+          backgroundColor: barColors,
+          borderColor: borderColors,
+          borderWidth: 1.5,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 900, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(10,14,26,0.92)',
+            borderColor: 'rgba(255,255,255,0.10)',
+            borderWidth: 1,
+            titleColor: 'rgba(240,244,255,0.9)',
+            bodyColor: 'rgba(240,244,255,0.55)',
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: { label: function(item){ return ' ' + item.raw + ' e-mails'; } }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: 'rgba(240,244,255,0.35)', font: { family: 'Inter', size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)', drawTicks: false },
+            border: { display: false, dash: [4, 4] },
+            ticks: {
+              color: 'rgba(240,244,255,0.28)',
+              font: { family: 'Inter', size: 10 },
+              padding: 10,
+              maxTicksLimit: 5,
+            }
+          }
+        }
+      }
+    });
+  })();
+
+  // ═══════════════════════════════════════════════════════════
+  // Google Auth + API integration
+  // ═══════════════════════════════════════════════════════════
+  const CLIENT_ID = '689328536931-6rkg2lb6bq20dgvqhfcs9k8ioqt8fp1v.apps.googleusercontent.com';
+  const SCOPES = [
+    'openid',
+    'profile',
+    'email',
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/calendar.readonly',
+    'https://www.googleapis.com/auth/tasks.readonly',
+  ].join(' ');
+
+  let tokenClient;
+  let accessToken = null;
+
+  // Set today's real date in the header
+  (function setDate() {
+    const now = new Date();
+    const str = now.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+    const el  = document.getElementById('dateDisplay');
+    if (el) el.textContent = str.charAt(0).toUpperCase() + str.slice(1);
+  })();
+
+  // Initialise token client once GSI is ready
+  window.addEventListener('load', () => {
+    if (typeof google === 'undefined') {
+      console.warn('GSI script not yet loaded.');
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: onTokenReceived,
+    });
+
+    document.getElementById('btnSignIn').addEventListener('click', () => {
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    });
+  });
+
+  // ── Called after the user grants permission ──
+  async function onTokenReceived(response) {
+    if (response.error) { console.error('Auth error:', response); return; }
+    accessToken = response.access_token;
+
+    // Fade out login overlay
+    document.getElementById('loginOverlay').classList.add('hidden');
+
+    // Show loading skeletons
+    setSkeletons();
+
+    // Use allSettled so a profile 401 never blocks Gmail + Calendar data
+    const [gmailRes, calRes, profileRes, tasksRes] = await Promise.allSettled([
+      fetchGmail(),
+      fetchCalendar(),
+      fetchProfile(),
+      fetchTasks(),
+    ]);
+
+    const gmailData   = gmailRes.status   === 'fulfilled' ? gmailRes.value   : null;
+    const calData     = calRes.status     === 'fulfilled' ? calRes.value     : null;
+    const profileData = profileRes.status === 'fulfilled' ? profileRes.value : null;
+    const tasksData   = tasksRes.status   === 'fulfilled' ? tasksRes.value   : null;
+
+    if (gmailData) updateEmailCard(gmailData);
+    if (calData) {
+      updateMeetCard(calData);
+      updateAgenda(calData);
+    }
+    if (tasksData) updateTaskCard(tasksData);
+    if (profileData) showUserChip(profileData);
+
+    if (!gmailData && !calData && !tasksData) {
+      console.error('All APIs failed:', gmailRes.reason, calRes.reason, tasksRes.reason);
+      showError();
+    }
+  }
+
+  function updateEmailCard(gmail) {
+    const unread = gmail.messagesUnread ?? 0;
+    document.getElementById('emailCount').textContent = unread;
+    document.getElementById('emailCount').setAttribute('aria-label', `${unread} emails não lidos`);
+    document.getElementById('emailSub').textContent   = `${unread} mensagem${unread !== 1 ? 's' : ''} na caixa de entrada`;
+    document.getElementById('emailPill').textContent  = unread > 0 ? 'Precisa atenção' : 'Tudo em dia ✓';
+  }
+
+  function updateMeetCard(cal) {
+    const events = (cal.items || []).filter(e => e.status !== 'cancelled');
+    const count  = events.length;
+    document.getElementById('meetCount').textContent = count;
+    document.getElementById('meetCount').setAttribute('aria-label', `${count} reuniões hoje`);
+
+    const now  = new Date();
+    const next = events.find(e => new Date(e.start?.dateTime || e.start?.date) > now);
+    document.getElementById('meetSub').textContent  = next
+      ? `Próxima: ${fmtTime(next.start?.dateTime)} — ${next.summary || '?'}`
+      : count > 0 ? 'Todas as reuniões já passaram' : 'Sem reuniões hoje';
+    document.getElementById('meetPill').textContent = next ? 'Em breve' : count > 0 ? 'Concluído' : 'Dia livre';
+  }
+
+  function updateTaskCard(tasks) {
+    const items = tasks.items || [];
+    const count = items.length;
+    document.getElementById('taskCount').textContent = count;
+    document.getElementById('taskCount').setAttribute('aria-label', `${count} tarefas pendentes`);
+    
+    const overdue = items.filter(t => t.due && new Date(t.due) < new Date()).length;
+    document.getElementById('taskSub').textContent = overdue > 0 
+      ? `${overdue} tarefa${overdue !== 1 ? 's' : ''} em atraso`
+      : count > 0 ? `${count} tarefa${count !== 1 ? 's' : ''} na lista` : 'Nenhuma tarefa pendente';
+    
+    document.getElementById('taskPill').textContent = overdue > 0 ? 'Atrasado' : count > 0 ? 'Em dia' : 'Vazio';
+  }
+
+  // ── Fetch helpers ──
+  async function apiFetch(url) {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  async function fetchProfile() {
+    return apiFetch('https://www.googleapis.com/oauth2/v3/userinfo');
+  }
+
+  async function fetchGmail() {
+    return apiFetch('https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX');
+  }
+
+  async function fetchCalendar() {
+    const now   = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+    const url   = `https://www.googleapis.com/calendar/v3/calendars/primary/events` +
+      `?timeMin=${encodeURIComponent(start)}&timeMax=${encodeURIComponent(end)}` +
+      `&singleEvents=true&orderBy=startTime&maxResults=20`;
+    return apiFetch(url);
+  }
+
+  async function fetchTasks() {
+    // Fetches from the default task list (@default)
+    return apiFetch('https://www.googleapis.com/tasks/v1/lists/@default/tasks?showCompleted=false');
+  }
+
+  // ── DOM updaters ──
+  function setSkeletons() {
+    const sk = (id, w) => {
+      document.getElementById(id).innerHTML =
+        `<span class="skeleton" style="width:${w};height:0.9em;display:inline-block">&nbsp;</span>`;
+    };
+    sk('emailCount', '2ch');
+    sk('meetCount',  '2ch');
+    sk('taskCount',  '2ch');
+    document.getElementById('emailSub').textContent  = 'Carregando…';
+    document.getElementById('meetSub').textContent   = 'Carregando…';
+    document.getElementById('taskSub').textContent   = 'Carregando…';
+    document.getElementById('emailPill').textContent = '…';
+    document.getElementById('meetPill').textContent  = '…';
+    document.getElementById('taskPill').textContent  = '…';
+    document.getElementById('agenda-count').textContent = '…';
+    document.querySelector('.agenda-list').innerHTML =
+      '<li class="agenda-item" style="justify-content:center">' +
+      '<span class="skeleton" style="width:55%;height:1.1em;display:inline-block">&nbsp;</span></li>';
+  }
+
+
+
+  function updateAgenda(cal) {
+    const events = (cal.items || []).filter(e => e.status !== 'cancelled');
+    const list   = document.querySelector('.agenda-list');
+    const badge  = document.getElementById('agenda-count');
+
+    badge.textContent = `${events.length} evento${events.length !== 1 ? 's' : ''}`;
+
+    if (events.length === 0) {
+      list.innerHTML = '<li class="agenda-item" style="justify-content:center;' +
+        'color:var(--text-muted);font-size:0.82rem">Sem eventos no calendário hoje 🎉</li>';
+      return;
+    }
+
+    list.innerHTML = events.map(evt => {
+      const start   = evt.start?.dateTime || evt.start?.date;
+      const end     = evt.end?.dateTime   || evt.end?.date;
+      const timeStr = evt.start?.dateTime ? fmtTime(start) : 'Dia todo';
+      const durStr  = evt.start?.dateTime ? fmtDuration(start, end) : '';
+      const loc     = evt.location ? ` &mdash; ${escHtml(evt.location)}` : '';
+      return `
+        <li class="agenda-item">
+          <span class="agenda-time">${timeStr}</span>
+          <div class="agenda-icon" aria-hidden="true">📅</div>
+          <div class="agenda-info">
+            <div class="agenda-event-title">${escHtml(evt.summary || '(sem título)')}</div>
+            <div class="agenda-duration">${durStr}${loc}</div>
+          </div>
+        </li>`;
+    }).join('');
+  }
+
+  function showUserChip(profile) {
+    const chip = document.getElementById('userChip');
+    chip.style.display = 'inline-flex';
+    chip.className = 'user-chip';
+    const avatar = profile.picture
+      ? `<img src="${profile.picture}" alt="Foto de ${escHtml(profile.name || '')}">`
+      : `<div class="user-chip-placeholder">${escHtml((profile.name || 'U')[0])}</div>`;
+    chip.innerHTML = `${avatar}<span>${escHtml(profile.name || profile.email || '')}</span>`;
+  }
+
+  function showError() {
+    document.getElementById('emailSub').textContent = 'Erro ao carregar dados';
+    document.getElementById('meetSub').textContent  = 'Erro ao carregar dados';
+  }
+
+  // ── Utilities ──
+  function fmtTime(iso) {
+    if (!iso) return '?';
+    return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDuration(start, end) {
+    if (!start || !end) return '';
+    const mins = Math.round((new Date(end) - new Date(start)) / 60000);
+    if (mins < 60) return `${mins} min`;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return m ? `${h}h ${m}min` : `${h}h`;
+  }
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  // ── Motivational Phrase ──
+  (function setMotivationalPhrase() {
+    const phrases = [
+      "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+      "Acredite que você pode e você já está no meio do caminho.",
+      "Grandes jornadas começam com um único passo.",
+      "Sua produtividade é um reflexo do seu foco.",
+      "Transforme seus obstáculos em degraus para o sucesso.",
+      "Faça hoje o que o seu 'eu' do futuro irá agradecer.",
+      "Foco no progresso, não na perfeição."
+    ];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    document.getElementById('motivationalPhrase').textContent = `"${phrase}"`;
+  })();
+
+  // ── Constellation Background ──
+  (function createConstellations() {
+    const container = document.getElementById('stars-container');
+    const starCount = 80;
+    const stars = [];
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const size = Math.random() * 2 + 1;
+      const duration = 2 + Math.random() * 3;
+      
+      star.style.left = `${x}%`;
+      star.style.top = `${y}%`;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.setProperty('--duration', `${duration}s`);
+      
+      container.appendChild(star);
+      stars.push({ x, y, el: star });
+    }
+
+    // Add some lines for constellations
+    for (let i = 0; i < 15; i++) {
+      const s1 = stars[Math.floor(Math.random() * stars.length)];
+      const s2 = stars[Math.floor(Math.random() * stars.length)];
+      
+      const dx = (s2.x - s1.x) * (window.innerWidth / 100);
+      const dy = (s2.y - s1.y) * (window.innerHeight / 100);
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      
+      if (dist < 200) {
+        const line = document.createElement('div');
+        line.className = 'constellation-line';
+        line.style.width = `${dist}px`;
+        line.style.left = `${s1.x}%`;
+        line.style.top = `${s1.y}%`;
+        line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+        container.appendChild(line);
+      }
+    }
+  })();
+
+  // ── Tarot Logic ──
+  (function initTarot() {
+    const generic = 'tarot_generic_mystical_1778803124825.png';
+    const cards = [
+      { name: "O Louco", img: generic, desc: "Novos começos, otimismo e confiança no universo." },
+      { name: "O Mago", img: 'tarot_the_magician_1778803075730.png', desc: "Ação manifesta, recursos e potencial criativo." },
+      { name: "A Sacerdotisa", img: generic, desc: "Intuição, mistério e sabedoria interior." },
+      { name: "A Imperatriz", img: generic, desc: "Abundância, natureza e fertilidade." },
+      { name: "O Imperador", img: generic, desc: "Estrutura, autoridade e controle." },
+      { name: "O Hierofante", img: generic, desc: "Tradição, conformidade e mentoria." },
+      { name: "Os Amantes", img: generic, desc: "Escolhas, parcerias e harmonia." },
+      { name: "O Carro", img: generic, desc: "Determinação, vitória e controle sobre a vontade." },
+      { name: "A Força", img: generic, desc: "Coragem, paciência e força interior." },
+      { name: "O Eremita", img: generic, desc: "Introspecção, busca pela verdade e guia espiritual." },
+      { name: "A Roda da Fortuna", img: generic, desc: "Mudança, ciclos inevitáveis e destino." },
+      { name: "A Justiça", img: generic, desc: "Equilíbrio, justiça e verdade." },
+      { name: "O Enforcado", img: generic, desc: "Perspectiva, sacrifício e pausa necessária." },
+      { name: "A Morte", img: generic, desc: "Fim de um ciclo, transformação e renascimento." },
+      { name: "A Temperança", img: generic, desc: "Moderação, equilíbrio e propósito." },
+      { name: "O Diabo", img: generic, desc: "Apegos, tentação e a sombra interior." },
+      { name: "A Torre", img: generic, desc: "Mudança súbita, revelação e caos necessário." },
+      { name: "A Estrela", img: 'tarot_the_star_1778803007627.png', desc: "Esperança, inspiração e serenidade." },
+      { name: "A Lua", img: 'tarot_the_moon_1778802988282.png', desc: "Ilusão, subconsciente e intuição profunda." },
+      { name: "O Sol", img: 'tarot_the_sun_1778802947704.png', desc: "Vitalidade, alegria e sucesso radiante." },
+      { name: "O Julgamento", img: generic, desc: "Despertar, renovação e chamado para a ação." },
+      { name: "O Mundo", img: generic, desc: "Realização total, integração e encerramento." }
+    ];
+
+    const container = document.getElementById('tarotContainer');
+    const inner = document.getElementById('tarotInner');
+    const img = document.getElementById('tarotImg');
+    const name = document.getElementById('tarotName');
+    const desc = document.getElementById('tarotDesc');
+    const instruction = document.getElementById('tarotInstruction');
+
+    // Pick card based on today's date so it stays the same all day
+    const todayStr = new Date().toISOString().split('T')[0];
+    const hash = todayStr.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const selectedCard = cards[hash % cards.length];
+
+    container.addEventListener('click', () => {
+      if (!inner.classList.contains('flipped')) {
+        img.src = selectedCard.img;
+        img.alt = selectedCard.name;
+        name.textContent = selectedCard.name;
+        desc.textContent = selectedCard.desc;
+        
+        inner.classList.add('flipped');
+        instruction.textContent = "Seu insight para hoje.";
+      }
+    });
+  })();
+
+  // Initialize Lucide icons on load
+  window.addEventListener('load', () => {
+    lucide.createIcons();
+  });
+  </script>
+</body>
+</html>
