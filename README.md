@@ -1,4 +1,5 @@
 # 🌌 Morning Productivity Dashboard | Por onde começo hoje?
+🔗 **Acesse o projeto online:** [Clique aqui para abrir o Dashboard](https://seu-usuario.github.io/nome-do-repositorio/)
 
 > Um dashboard diário minimalista e imersivo com tema dark/glassmorphism, integração em tempo real com o ecossistema Google (Gmail, Calendar e Tasks) e um ritual consciente de início de dia com tiragem interativa de Tarot.
 
